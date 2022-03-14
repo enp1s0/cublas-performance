@@ -30,8 +30,9 @@ int main(int argc, char** argv) {
 	CUTF_CHECK_ERROR(curandSetPseudoRandomGeneratorSeed(*cugen.get(), 10));
 	CUTF_CHECK_ERROR(cutf::curand::generate_uniform(*cugen.get(), mat_a.get(), 1u << (2 * max_log_N)));
 	CUTF_CHECK_ERROR(cutf::curand::generate_uniform(*cugen.get(), mat_b.get(), 1u << (2 * max_log_N)));
+	CUTF_CHECK_ERROR(cudaDeviceSynchronize());
 
-	std::printf("m,n,k,residual,troughput_in_tflops\n");
+	std::printf("m,n,k,residual,max_relative_error,troughput_in_tflops\n");
 	for (unsigned log_m = min_log_N; log_m <= max_log_N; log_m += log_N_interval) {
 		for (unsigned log_n = min_log_N; log_n <= max_log_N; log_n += log_N_interval) {
 			for (unsigned log_k = min_log_N; log_k <= max_log_N; log_k += log_N_interval) {
@@ -54,7 +55,7 @@ int main(int argc, char** argv) {
 							));
 
 				const auto error = mtk::mateval::cuda::get_error_AxB(
-						mtk::mateval::relative_residual,
+						mtk::mateval::relative_residual | mtk::mateval::max_relative_error,
 						m, n, k,
 						mtk::mateval::col_major, mtk::mateval::col_major, mtk::mateval::col_major,
 						mat_a.get(), m,
@@ -80,12 +81,13 @@ int main(int argc, char** argv) {
 				CUTF_CHECK_ERROR(cudaDeviceSynchronize());
 				const auto end_clock = std::chrono::system_clock::now();
 
-				const auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_clock - start_clock).count() * 1e-6;
-				const auto tflops = 2 * m * n * k / 1e12 / duration / num_tests;
+				const auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_clock - start_clock).count() * 1e-6 / num_tests;
+				const auto tflops = 2lu * m * n * k / duration * 1e-12;
 
-				std::printf("%lu,%lu,%lu,%e,%e\n",
+				std::printf("%lu,%lu,%lu,%e,%e,%e\n",
 						m, n, k,
 						error.at(mtk::mateval::relative_residual),
+						error.at(mtk::mateval::max_relative_error),
 						tflops);
 			}
 		}
