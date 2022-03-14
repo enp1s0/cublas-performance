@@ -5,7 +5,7 @@
 #include <mateval/comparison_cuda.hpp>
 
 constexpr unsigned min_log_N = 5;
-constexpr unsigned max_log_N = 15;
+constexpr unsigned max_log_N = 14;
 constexpr unsigned log_N_interval = 1;
 
 constexpr unsigned num_tests = 1u << 5;
