@@ -2,6 +2,7 @@
 #include <chrono>
 #include <cutf/memory.hpp>
 #include <cutf/cublas.hpp>
+#include <cutf/curand.hpp>
 #include <mateval/comparison_cuda.hpp>
 
 constexpr unsigned min_log_N = 5;
@@ -24,6 +25,11 @@ int main(int argc, char** argv) {
 	auto mat_a = cutf::memory::get_device_unique_ptr<float>(1u << (2 * max_log_N));
 	auto mat_b = cutf::memory::get_device_unique_ptr<float>(1u << (2 * max_log_N));
 	auto mat_c = cutf::memory::get_device_unique_ptr<float>(1u << (2 * max_log_N));
+
+	auto cugen = cutf::curand::get_curand_unique_ptr(CURAND_RNG_PSEUDO_PHILOX4_32_10);
+	CUTF_CHECK_ERROR(curandSetPseudoRandomGeneratorSeed(*cugen.get(), 10));
+	CUTF_CHECK_ERROR(cutf::curand::generate_uniform(*cugen.get(), mat_a.get(), 1u << (2 * max_log_N)));
+	CUTF_CHECK_ERROR(cutf::curand::generate_uniform(*cugen.get(), mat_b.get(), 1u << (2 * max_log_N)));
 
 	std::printf("m,n,k,residual,troughput_in_tflops\n");
 	for (unsigned log_m = min_log_N; log_m <= max_log_N; log_m += log_N_interval) {
