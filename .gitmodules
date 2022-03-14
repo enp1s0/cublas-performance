@@ -1,0 +1,6 @@
+[submodule "mateval"]
+	path = mateval
+	url = https://github.com/enp1s0/mateval
+[submodule "cutf"]
+	path = cutf
+	url = https://github.com/enp1s0/cutf
