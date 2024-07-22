@@ -10,7 +10,17 @@ TARGET=cublas.test
 $(TARGET):main.cu ./mateval/build/libmateval_cuda.a
 	$(NVCC) $< -o $@ $(NVCCFLAGS)
 
-./mateval/build/libmateval_cuda.a:
+clone_submodule_cutf:cutf/README.md
+	git submodule update --init --recursive
+
+clone_submodule_mateval:mateval/README.md
+	git submodule update --init --recursive
+
+clone:
+	make clone_submodule_mateval
+	make clone_submodule_cutf
+
+./mateval/build/libmateval_cuda.a: clone
 	mkdir -p ./mateval/build/ && \
 	cd ./mateval/build/ && \
 	cmake .. && \
